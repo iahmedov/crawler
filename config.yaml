@@ -1,0 +1,62 @@
+version: '1'
+
+workers: 3
+
+queue:
+  name: queue_db_backed_local
+  connstring: database_connstring
+  strategy: fifo
+  cache: 100
+  load:
+    requests: 100
+    period: 1s
+
+task.state.transitioner:
+  name: unreliable
+
+filters:
+  link:
+    - name: unique_from_db
+      connstring: database_connstring
+    - name: facebook
+    - name: domain_only
+    - name: depth
+      depth: 5
+    - name: robots
+      path:
+        http: https://google.com
+  link.strategy: 
+    name: cumulative
+
+  content:
+    - name: porn
+      include: false
+      keywords: ['xxx', 'abc']
+    - name: content_type
+      include: false
+      types: ['text/css', 'image/png']
+  content.strategy: 
+    name: negative_high
+
+fetchers:
+  - name: limit_body
+    # size limit in bytes
+    limit: 10000
+
+  - name: circuit_breaker # using sony gobreaker
+    max_requests: 5
+    interval: 2
+    timeout: 20
+
+extractors:
+  - name: html
+  - name: json
+
+storages:
+  link:
+  - name: postgresql
+    connstring: database_connstring
+
+  page:
+  - name: postgresql
+    connstring: database_connstring
