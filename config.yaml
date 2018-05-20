@@ -3,34 +3,44 @@ version: '1'
 workers: 3
 
 queue:
-  name: queue_db_backed_local
-  connstring: database_connstring
+  name: local
+  buffer_size: 100
+  link_wait_time: 10
   strategy: fifo
-  cache: 100
   load:
     requests: 100
-    period: 1s
+    period: 1000 # in milliseconds
 
 task.state.transitioner:
   name: unreliable
 
+
+storages:
+  link:
+  - name: memory
+
+  page:
+  - name: memory
+
 filters:
   link:
-    - name: unique_from_db
-      connstring: database_connstring
+    - name: unique_from_storage
+      storage: 
+        name: "memory" # TODO: doesnt look good, needs waiting or config if loaded before `storages`
     - name: facebook
-    - name: domain_only
+      include: false
+    - name: domain
+      domain: test.com
     - name: depth
       depth: 5
-    - name: robots
-      path:
-        http: https://google.com
+    # - name: robots
+    #   path:
+    #     http: https://google.com
   link.strategy: 
     name: cumulative
 
   content:
     - name: porn
-      include: false
       keywords: ['xxx', 'abc']
     - name: content_type
       include: false
@@ -50,13 +60,3 @@ fetchers:
 
 extractors:
   - name: html
-  - name: json
-
-storages:
-  link:
-  - name: postgresql
-    connstring: database_connstring
-
-  page:
-  - name: postgresql
-    connstring: database_connstring

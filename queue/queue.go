@@ -7,6 +7,7 @@ import (
 )
 
 type Queue interface {
+	Run(ctx context.Context) error
 	Tasks(ctx context.Context) <-chan task.Task
 	Put([]task.Task) error
 

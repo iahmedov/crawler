@@ -6,33 +6,37 @@ import (
 	"github.com/iahmedov/crawler/filter"
 )
 
-type StrategyFactory func(filter.StrategyConfig) Strategy
+type StrategyBuilderFactory func(filter.StrategyConfig) (StrategyBuilder, error)
 
-var strategies map[string]StrategyFactory
+var strategies map[string]StrategyBuilderFactory
 
-func RegisterStrategyFactory(name string, factory StrategyFactory) {
+func init() {
+	strategies = map[string]StrategyBuilderFactory{}
+}
+
+func RegisterStrategyBuilderFactory(name string, factory StrategyBuilderFactory) {
 	if _, ok := strategies[name]; ok {
 		panic(fmt.Sprintf("strategy already exists with name: %s", name))
 	}
 	strategies[name] = factory
 }
 
-func BuildStrategy(name string, config filter.StrategyConfig) Strategy {
+func BuildStrategyBuilder(name string, config filter.StrategyConfig) (StrategyBuilder, error) {
 	factory, ok := strategies[name]
 	if !ok {
-		return nil
+		return nil, fmt.Errorf("%s strategy not found", name)
 	}
 
 	return factory(config)
 }
 
-func LoadStrategy(config filter.StrategyConfig) Strategy {
+func LoadStrategyBuilder(config filter.StrategyConfig) (StrategyBuilder, error) {
 	if name, ok := config["name"]; ok {
 		nameStr, ok := name.(string)
 		if ok {
-			return BuildStrategy(nameStr, config)
+			return BuildStrategyBuilder(nameStr, config)
 		}
 	}
 
-	return nil
+	return nil, nil
 }

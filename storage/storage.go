@@ -19,6 +19,5 @@ type PageStore interface {
 
 	Page(model.URL) (*model.Page, error)
 	PageWithEntries(model.URL) (*model.Page, error)
-	SavePage(*model.Page) error
 	AppendCrawlEntry(*model.CrawlEntry) error
 }

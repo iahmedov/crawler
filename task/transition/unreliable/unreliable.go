@@ -1,16 +1,18 @@
 package unreliable
 
-import "github.com/iahmedov/crawler/task"
+import (
+	"github.com/iahmedov/crawler/task"
+)
 
-func Init() {
-	task.RegisterStateTransitionerFactory("unreliable", func(task.Config) task.StateTransitioner {
-		return &unreliable{}
+func init() {
+	task.RegisterStateTransitionerFactory("unreliable", func(task.Config) (task.StateTransitioner, error) {
+		return &unreliable{}, nil
 	})
 }
 
 type unreliable struct {
 }
 
-func (u *unreliable) Transition(task task.Task, state task.TaskState) error {
+func (u *unreliable) Transition(task task.Task, state task.TaskState, comment string) error {
 	return nil
 }

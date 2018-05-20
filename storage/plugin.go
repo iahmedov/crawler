@@ -4,11 +4,16 @@ import (
 	"fmt"
 )
 
-type LinkStoreFactory func(KV) LinkStore
-type PageStoreFactory func(KV) PageStore
+type LinkStoreFactory func(KV) (LinkStore, error)
+type PageStoreFactory func(KV) (PageStore, error)
 
 var linkStores map[string]LinkStoreFactory
 var pageStores map[string]PageStoreFactory
+
+func init() {
+	linkStores = map[string]LinkStoreFactory{}
+	pageStores = map[string]PageStoreFactory{}
+}
 
 func RegisterLinkStoreFactory(name string, factory LinkStoreFactory) {
 	if _, ok := linkStores[name]; ok {
@@ -17,27 +22,31 @@ func RegisterLinkStoreFactory(name string, factory LinkStoreFactory) {
 	linkStores[name] = factory
 }
 
-func BuildLinkStore(name string, config KV) LinkStore {
+func BuildLinkStore(name string, config KV) (LinkStore, error) {
 	factory, ok := linkStores[name]
 	if !ok {
-		return nil
+		return nil, fmt.Errorf("%s link store not found", name)
 	}
 
 	return factory(config)
 }
 
-func LoadLinkStores(config Config) []LinkStore {
+func LoadLinkStores(config Config) ([]LinkStore, error) {
 	items := []LinkStore{}
 	for _, c := range config.Link {
 		if name, ok := c["name"]; ok {
 			nameStr, ok := name.(string)
 			if ok {
-				items = append(items, BuildLinkStore(nameStr, c))
+				s, err := BuildLinkStore(nameStr, c)
+				if err != nil {
+					return nil, err
+				}
+				items = append(items, s)
 			}
 		}
 	}
 
-	return items
+	return items, nil
 }
 
 func RegisterPageStoreFactory(name string, factory PageStoreFactory) {
@@ -47,25 +56,29 @@ func RegisterPageStoreFactory(name string, factory PageStoreFactory) {
 	pageStores[name] = factory
 }
 
-func BuildPageStore(name string, config KV) PageStore {
+func BuildPageStore(name string, config KV) (PageStore, error) {
 	factory, ok := pageStores[name]
 	if !ok {
-		return nil
+		return nil, fmt.Errorf("%s page store not found", name)
 	}
 
 	return factory(config)
 }
 
-func LoadPageStores(config Config) []PageStore {
+func LoadPageStores(config Config) ([]PageStore, error) {
 	items := []PageStore{}
 	for _, c := range config.Page {
 		if name, ok := c["name"]; ok {
 			nameStr, ok := name.(string)
 			if ok {
-				items = append(items, BuildPageStore(nameStr, c))
+				s, err := BuildPageStore(nameStr, c)
+				if err != nil {
+					return nil, err
+				}
+				items = append(items, s)
 			}
 		}
 	}
 
-	return items
+	return items, nil
 }

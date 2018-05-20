@@ -10,17 +10,16 @@ type Validator struct {
 	context string
 }
 
-func NewValidator() *Validator {
+func NewValidator(context string) *Validator {
 	return &Validator{
 		errors:  map[string][]error{},
-		context: "",
+		context: context,
 	}
 }
 
 func (v *Validator) WithContext(ctx string) *Validator {
-	childValidator := NewValidator()
+	childValidator := NewValidator(fmt.Sprintf("%s.%s", v.context, ctx))
 	childValidator.errors = v.errors
-	childValidator.context = fmt.Sprintf("%s.%s", v.context, ctx)
 	return childValidator
 }
 

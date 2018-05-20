@@ -4,9 +4,13 @@ import (
 	"fmt"
 )
 
-type ExtractorFactory func(Config) Extractor
+type ExtractorFactory func(Config) (Extractor, error)
 
 var extractors map[string]ExtractorFactory
+
+func init() {
+	extractors = map[string]ExtractorFactory{}
+}
 
 func RegisterExtractorFactory(name string, factory ExtractorFactory) {
 	if _, ok := extractors[name]; ok {
@@ -15,25 +19,29 @@ func RegisterExtractorFactory(name string, factory ExtractorFactory) {
 	extractors[name] = factory
 }
 
-func BuildExtractor(name string, config Config) Extractor {
+func BuildExtractor(name string, config Config) (Extractor, error) {
 	factory, ok := extractors[name]
 	if !ok {
-		return nil
+		return nil, fmt.Errorf("%s extractor not found", name)
 	}
 
 	return factory(config)
 }
 
-func LoadExtractors(configs []Config) []Extractor {
+func LoadExtractors(configs []Config) ([]Extractor, error) {
 	items := []Extractor{}
 	for _, config := range configs {
 		if name, ok := config["name"]; ok {
 			nameStr, ok := name.(string)
 			if ok {
-				items = append(items, BuildExtractor(nameStr, config))
+				extractor, err := BuildExtractor(nameStr, config)
+				if err != nil {
+					return nil, err
+				}
+				items = append(items, extractor)
 			}
 		}
 	}
 
-	return items
+	return items, nil
 }

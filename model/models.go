@@ -1,6 +1,8 @@
 package model
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -41,10 +43,15 @@ func (d Document) Text() string {
 	return string(d)
 }
 
-func NewCrawlEntry(parent url.URL) *CrawlEntry {
+func (d Document) Reader() io.Reader {
+	return bytes.NewReader(d)
+}
+
+func NewCrawlEntry(parent url.URL, depth uint32) *CrawlEntry {
 	return &CrawlEntry{
 		Parent:    parent,
 		Error:     nil,
+		Depth:     depth,
 		CreatedAt: time.Now().UTC(),
 	}
 }

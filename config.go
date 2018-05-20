@@ -3,6 +3,9 @@ package crawler
 import (
 	"github.com/iahmedov/crawler/fetcher"
 	"github.com/iahmedov/crawler/filter"
+	filtercontent "github.com/iahmedov/crawler/filter/content"
+	filterlink "github.com/iahmedov/crawler/filter/link"
+	filterstrategy "github.com/iahmedov/crawler/filter/strategy"
 	"github.com/iahmedov/crawler/link"
 	"github.com/iahmedov/crawler/queue"
 	"github.com/iahmedov/crawler/storage"
@@ -21,10 +24,14 @@ type Config struct {
 }
 
 func ValidateConfig(config Config) *validation.Validator {
-	v := validation.NewValidator()
+	v := validation.NewValidator("config")
 	queue.ValidateConfig(config.Queue, v.WithContext("queue"))
 	task.ValidateConfig(config.StateTransition, v.WithContext("task"))
-	filter.ValidateConfig(config.Filters, v.WithContext("filter"))
+
+	filterlink.ValidateConfig(config.Filters, v.WithContext("filter.link"))
+	filtercontent.ValidateConfig(config.Filters, v.WithContext("filter.content"))
+	filterstrategy.ValidateConfig(config.Filters, v.WithContext("filter.strategy"))
+
 	fetcher.ValidateConfigs(config.Fetchers, v.WithContext("fetcher"))
 	link.ValidateConfigs(config.Extractors, v.WithContext("extractor"))
 	storage.ValidateConfigs(config.Storage, v.WithContext("storage"))

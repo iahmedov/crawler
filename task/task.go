@@ -18,4 +18,5 @@ const (
 	TaskStateProcessing
 	TaskStateProcessed
 	TaskStateFailed
+	TaskStateDropped
 )

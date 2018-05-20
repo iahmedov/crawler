@@ -1,10 +1,18 @@
 package task
 
-import "fmt"
+import (
+	"fmt"
 
-type StateTransitionerFactory func(Config) StateTransitioner
+	"github.com/iahmedov/crawler/validation"
+)
+
+type StateTransitionerFactory func(Config) (StateTransitioner, error)
 
 var transitioners map[string]StateTransitionerFactory
+
+func init() {
+	transitioners = map[string]StateTransitionerFactory{}
+}
 
 func RegisterStateTransitionerFactory(name string, factory StateTransitionerFactory) {
 	if _, ok := transitioners[name]; ok {
@@ -13,22 +21,23 @@ func RegisterStateTransitionerFactory(name string, factory StateTransitionerFact
 	transitioners[name] = factory
 }
 
-func BuildStateTransitioner(name string, config Config) StateTransitioner {
+func BuildStateTransitioner(name string, config Config) (StateTransitioner, error) {
 	factory, ok := transitioners[name]
 	if !ok {
-		return nil
+		return nil, fmt.Errorf("%s transitioner not found", name)
 	}
 
 	return factory(config)
 }
 
-func LoadStateTransitioner(config Config) StateTransitioner {
-	if name, ok := config["name"]; ok {
-		nameStr, ok := name.(string)
-		if ok {
-			return BuildStateTransitioner(nameStr, config)
-		}
+func LoadStateTransitioner(config Config) (StateTransitioner, error) {
+	v := validation.NewValidator("task")
+	ValidateConfig(config, v)
+	if v.HasError() {
+		return nil, nil
 	}
 
-	return nil
+	name, _ := config["name"]
+	nameStr, _ := name.(string)
+	return BuildStateTransitioner(nameStr, config)
 }
